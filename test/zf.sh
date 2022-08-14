@@ -154,14 +154,12 @@ config_docker() {
   echo "Tải tệp cấu hình DOCKER"
   cat >docker-compose.yml <<EOF
 version: '3'
-services: 
-  xrayr: 
+services:
+  xrayr:
     image: aikocute/xrayr:latest
     volumes:
       - ./aiko.yml:/etc/XrayR/aiko.yml # thư mục cấu hình bản đồ
-      - ./dns.json:/etc/XrayR/dns.json 
-      - ./server.pem:/etc/XrayR/server.pem
-      - ./privkey.pem:/etc/XrayR/privkey.pem
+      - ./dns.json:/etc/XrayR/dns.json
     restart: always
     network_mode: host
 EOF
@@ -178,7 +176,7 @@ EOF
 
   cat >aiko.yml <<EOF
 Log:
-  Level: none # Log level: none, error, warning, info, debug 
+  Level: none # Log level: none, error, warning, info, debug
   AccessPath: # /etc/XrayR/access.Log
   ErrorPath: # /etc/XrayR/error.log
 DnsConfigPath: # /etc/XrayR/dns.json # Path to dns config, check https://xtls.github.io/config/dns.html for help
@@ -190,7 +188,7 @@ ConnetionConfig:
   ConnIdle: 30 # Connection idle time limit, Second
   UplinkOnly: 2 # Time limit when the connection downstream is closed, Second
   DownlinkOnly: 4 # Time limit when the connection is closed after the uplink is closed, Second
-  BufferSize: 64 # The internal cache size of each connection, kB 
+  BufferSize: 64 # The internal cache size of each connection, kB
 Nodes:
   -
     PanelType: "V2board" # Panel type: SSpanel, V2board, PMpanel, Proxypanel
@@ -223,15 +221,15 @@ Nodes:
           Dest: 80 # Required, Destination of fallback, check https://xtls.github.io/config/fallback/ for details.
           ProxyProtocolVer: 0 # Send PROXY protocol version, 0 for dsable
       CertConfig:
-        CertMode: file # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
+        CertMode: dns # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
         CertDomain: "$CertDomain" # Domain to cert
         CertFile: /etc/XrayR/server.pem # Provided if the CertMode is file
         KeyFile: /etc/XrayR/privkey.pem
         Provider: cloudflare # DNS cert provider, Get the full support list here: https://go-acme.github.io/lego/dns/
         Email: test@me.com
         DNSEnv: # DNS ENV option used by DNS provider
-          CLOUDFLARE_EMAIL: aaa
-          CLOUDFLARE_API_KEY: bbb
+          CLOUDFLARE_EMAIL: zingfastpremium@gmail.com
+          CLOUDFLARE_API_KEY: 6b7986c081d4c47a4109e5f6bfb8998b011b0
   -
     PanelType: "V2board" # Panel type: SSpanel, V2board, PMpanel, Proxypanel
     ApiConfig:
@@ -263,15 +261,15 @@ Nodes:
           Dest: 80 # Required, Destination of fallback, check https://xtls.github.io/config/fallback/ for details.
           ProxyProtocolVer: 0 # Send PROXY protocol version, 0 for dsable
       CertConfig:
-        CertMode: none # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
+        CertMode: dns # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
         CertDomain: "$CertDomain" # Domain to cert
         CertFile: /etc/XrayR/server.pem # Provided if the CertMode is file
         KeyFile: /etc/XrayR/privkey.pem
         Provider: cloudflare # DNS cert provider, Get the full support list here: https://go-acme.github.io/lego/dns/
         Email: test@me.com
         DNSEnv: # DNS ENV option used by DNS provider
-          CLOUDFLARE_EMAIL: aaa
-          CLOUDFLARE_API_KEY: bbb
+          CLOUDFLARE_EMAIL: zingfastpremium@gmail.com
+          CLOUDFLARE_API_KEY: 6b7986c081d4c47a4109e5f6bfb8998b011b0
     -
     PanelType: "V2board" # Panel type: SSpanel, V2board, PMpanel, Proxypanel
     ApiConfig:
@@ -303,75 +301,15 @@ Nodes:
           Dest: 80 # Required, Destination of fallback, check https://xtls.github.io/config/fallback/ for details.
           ProxyProtocolVer: 0 # Send PROXY protocol version, 0 for dsable
       CertConfig:
-        CertMode: file # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
+        CertMode: dns # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
         CertDomain: "$CertDomain" # Domain to cert
         CertFile: /etc/XrayR/server.pem # Provided if the CertMode is file
         KeyFile: /etc/XrayR/privkey.pem
         Provider: cloudflare # DNS cert provider, Get the full support list here: https://go-acme.github.io/lego/dns/
         Email: test@me.com
         DNSEnv: # DNS ENV option used by DNS provider
-          CLOUDFLARE_EMAIL: aaa
-          CLOUDFLARE_API_KEY: bbb
-EOF
-
-    cat >server.pem <<EOF
------BEGIN CERTIFICATE-----
-MIIEojCCA4qgAwIBAgIUatuVumtcVBpobMa3CvhPFF2KaFEwDQYJKoZIhvcNAQEL
-BQAwgYsxCzAJBgNVBAYTAlVTMRkwFwYDVQQKExBDbG91ZEZsYXJlLCBJbmMuMTQw
-MgYDVQQLEytDbG91ZEZsYXJlIE9yaWdpbiBTU0wgQ2VydGlmaWNhdGUgQXV0aG9y
-aXR5MRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRMwEQYDVQQIEwpDYWxpZm9ybmlh
-MB4XDTIyMDgxNDA2NTUwMFoXDTM3MDgxMDA2NTUwMFowYjEZMBcGA1UEChMQQ2xv
-dWRGbGFyZSwgSW5jLjEdMBsGA1UECxMUQ2xvdWRGbGFyZSBPcmlnaW4gQ0ExJjAk
-BgNVBAMTHUNsb3VkRmxhcmUgT3JpZ2luIENlcnRpZmljYXRlMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyAA95/PPB93I/DjhBAeS4f9vmilHZCfe2zJ
-CnnGPDEt5EexIzMK9xpSNeMISFj6xSP3aAechonrNZMJeaJZ+Mc8/SWEV1u05uq1
-A6oefYS7ze+M1WJ7mKCoZz0KVamgTSyh3Gi4xyuSb49KidyHazbJk2UTJhojMAK+
-ErDy/sQDSlT9pRmI0UI9XQ5E7zKw6NzIm3oLrL2leVL0ShEk0XHPgiRo1RR3gnRn
-X0DFw971M7doWmA+UgrYtD3CpZmlGSg1PEmkbelrFKvZ8F7wqO+zXhcQbdQnR2l1
-2+2buZVaNQcHZH8cd5891iixqeqEWLo78O1sNm8Wx32hlrlPTQIDAQABo4IBJDCC
-ASAwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
-ATAMBgNVHRMBAf8EAjAAMB0GA1UdDgQWBBS+rt3VKinjEPx4w8KjE3GTc6X+ajAf
-BgNVHSMEGDAWgBQk6FNXXXw0QIep65TbuuEWePwppDBABggrBgEFBQcBAQQ0MDIw
-MAYIKwYBBQUHMAGGJGh0dHA6Ly9vY3NwLmNsb3VkZmxhcmUuY29tL29yaWdpbl9j
-YTAlBgNVHREEHjAcgg0qLnppbmdmYXN0LnZuggt6aW5nZmFzdC52bjA4BgNVHR8E
-MTAvMC2gK6AphidodHRwOi8vY3JsLmNsb3VkZmxhcmUuY29tL29yaWdpbl9jYS5j
-cmwwDQYJKoZIhvcNAQELBQADggEBAJRqjIhfW60tkJ0krF2e6XLUuJCeyXis1I+A
-uFrdwNf8UdvGBoYFlFZqGzYuzBLN9DGeE9JgrZGbfir8tPWmZR18l44rNwcAHHOO
-EmxUbqokTzXVJ7SXy7NhJ8US0gjyN/iBTYFBlv4fE1E51OqNYfX4sDpnnTSTAsJ0
-Zjo0OHsNzBZ8z9Zgvs21GThtb8ZVw5kXoZ6PmXQqZ8DNbX3gy2C1Rzy6/GGDRRxj
-Jl5/+/qtY1+fwhIjNDTUekQG/4F7NT1SxbEwDwLI8ZQiVCxUgRCEGzZQEzU/BTGG
-LapVEvkXI6bRdJdSSLFI8vMwXxp2k4UGON6vC4iIyNX49rbgPxw=
------END CERTIFICATE-----
-EOF
-    cat >privkey.pem <<EOF
------BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCrIAD3n888H3cj
-8OOEEB5Lh/2+aKUdkJ97bMkKecY8MS3kR7EjMwr3GlI14whIWPrFI/doB5yGies1
-kwl5oln4xzz9JYRXW7Tm6rUDqh59hLvN74zVYnuYoKhnPQpVqaBNLKHcaLjHK5Jv
-j0qJ3IdrNsmTZRMmGiMwAr4SsPL+xANKVP2lGYjRQj1dDkTvMrDo3MibegusvaV5
-UvRKESTRcc+CJGjVFHeCdGdfQMXD3vUzt2haYD5SCti0PcKlmaUZKDU8SaRt6WsU
-q9nwXvCo77NeFxBt1CdHaXXb7Zu5lVo1Bwdkfxx3nz3WKLGp6oRYujvw7Ww2bxbH
-faGWuU9NAgMBAAECggEAAmS+NA3OLj8abCxFt7vUpfskTMeAl7tFdR/TvWEaqWOJ
-YB9d65TJMHpJGsEu2nmJeGcaYiAedltI05pXkECkatsOj/6NrVMhDUx3H7KqHoNU
-GntL8v10+8Yzf3jWbir4jQZ0ynUZ2zSm0FymuZWWEfqAM0mUolHMmt1O9J/4+3Xo
-jY9kiBbeUgEY4l9KB6RDM5J9tSHyB8w78LYL2hfJqpvZmNZ9bafZGglSdETSULDr
-xeJNxA6eHBQzLUCT+Nga3tTJFflr6BTLUx7IV6qH0qsLtUBN3b1X2aGozGHin4KE
-RxszV+Zh3/qeiR9U/K9mV80o/SfWYbXW+rf58atmGQKBgQDTMtz+o8aQm9IlQ4FY
-TOGhVYAcC+bybg3Ci8J0WfoIXP1SNUjmLudWfm2zu/1Vvzs2bktRdFoUAgghNDjs
-K2cptyC1iVFtZuIGx2hc1pe6oYOLVRcWbhVrIlOluZAimL55zf2Ymj0yl/5REFzn
-JaLD0ECwIzWQmIkXhF0DMUGWIwKBgQDPbPD9GhFRtGPuK790GcODbUfWLzq1tZVV
-6RmO+s2i9B/nylHY/y/leEV+gQWl9fVZcxvBtnDNBvDdcq6qg3wafj0kcaoNRoHh
-EUh6vb8pZ/6TkLkaApKJyi3liJL/uHIGfSbo/Yi5vNxb/s3+pJFhDwluHM0GkJ4f
-38/RIv+DzwKBgQCBje/23GxQBOXyKejMS80U9KfzjHGNQWl7b9RHH3K7cp+KsFkZ
-qqgKbN/Ko4UR9o7SIvJc8yzWnTBzfd91MGLGOin8clHa9IOueOBSIulMeQuCix3w
-inLlF1eMj7oVHvGpMm1gES19PbOp8omq2XFxAOzNn6uaGZfvLykHbk23VQKBgCOg
-6c//v0PSgWuylgMiPcQAbFts51+43frQvDQj/lhkKGrPBLoKMzbuLrmo/chg9BC2
-RelDJiMBczQGc9wUE6gVUPlGkNgQ6VQ4fMOgfgpls4OzUygVkwgZ80I+8Ej+bI+S
-xbE1g1usBgnDPazkpZgPViZUyh67jn2ZGwAoS81fAoGAcI0jB5YmTia9bZkdKIoI
-IDkgO0NaZBpEAQAnz1LjNXysZQg3eG8Y+TUCm0naRNlIXceFBfldEU9b4MIXqxYB
-fgKT/yV6Efhs5g0nP6imICNo424dBYS+3G39irl0pOeNsdsCTvacGuzRFqU0KAgd
-cxxHuGCr72kr+SMaFZRqSJs=
------END PRIVATE KEY-----
+          CLOUDFLARE_EMAIL: zingfastpremium@gmail.com
+          CLOUDFLARE_API_KEY: 6b7986c081d4c47a4109e5f6bfb8998b011b0
 EOF
 }
 
