@@ -119,10 +119,10 @@ pre_install_docker_compose() {
     echo -e "Node_ID: ${node_id_trojan}"
     echo "-------------------------------"
 
-    read -p " ID nút (Node_ID_Shadowsocks):" node_id_Shadowsocks
-    [ -z "${node_id_Shadowsocks}" ] && node_id=0
+    read -p " ID nút (Node_ID_ss):" node_id_ss
+    [ -z "${node_id_ss}" ] && node_id=0
     echo "-------------------------------"
-    echo -e "Node_ID: ${node_id_Shadowsocks}"
+    echo -e "Node_ID: ${node_id_ss}"
     echo "-------------------------------"
 
     read -p "Vui long nhập CertDomain :" CertDomain
@@ -155,11 +155,13 @@ config_docker() {
   cat >docker-compose.yml <<EOF
 version: '3'
 services:
-  xrayr:
-    image: aikocute/xrayr:latest
+  aikor:
+    image: aikocute/aikor:latest
     volumes:
-      - ./aiko.yml:/etc/XrayR/aiko.yml # thư mục cấu hình bản đồ
-      - ./dns.json:/etc/XrayR/dns.json
+      - ./aiko.yml:/etc/AikoR/aiko.yml # thư mục cấu hình bản đồ
+      - ./dns.json:/etc/AikoR/dns.json
+      - ./server.pem:/etc/AikoR/server.pem
+      - ./privkey.pem:/etc/AikoR/privkey.pem
     restart: always
     network_mode: host
 EOF
@@ -177,15 +179,15 @@ EOF
   cat >aiko.yml <<EOF
 Log:
   Level: none # Log level: none, error, warning, info, debug
-  AccessPath: # /etc/XrayR/access.Log
-  ErrorPath: # /etc/XrayR/error.log
-DnsConfigPath: # /etc/XrayR/dns.json # Path to dns config, check https://xtls.github.io/config/dns.html for help
-RouteConfigPath: # /etc/XrayR/route.json # Path to route config, check https://xtls.github.io/config/routing.html for help
-InboundConfigPath: # /etc/XrayR/custom_inbound.json # Path to custom inbound config, check https://xtls.github.io/config/inbound.html for help
-OutboundConfigPath: # /etc/XrayR/custom_outbound.json # Path to custom outbound config, check https://xtls.github.io/config/outbound.html for help
+  AccessPath: # /etc/AikoR/access.Log
+  ErrorPath: # /etc/AikoR/error.log
+DnsConfigPath: # /etc/AikoR/dns.json # Path to dns config, check https://xtls.github.io/config/dns.html for help
+RouteConfigPath: # /etc/AikoR/route.json # Path to route config, check https://xtls.github.io/config/routing.html for help
+InboundConfigPath: # /etc/AikoR/custom_inbound.json # Path to custom inbound config, check https://xtls.github.io/config/inbound.html for help
+OutboundConfigPath: # /etc/AikoR/custom_outbound.json # Path to custom outbound config, check https://xtls.github.io/config/outbound.html for help
 ConnetionConfig:
   Handshake: 4 # Handshake time limit, Second
-  ConnIdle: 30 # Connection idle time limit, Second
+  ConnIdle: 86400 # Connection idle time limit, Second
   UplinkOnly: 2 # Time limit when the connection downstream is closed, Second
   DownlinkOnly: 4 # Time limit when the connection is closed after the uplink is closed, Second
   BufferSize: 64 # The internal cache size of each connection, kB
@@ -202,7 +204,7 @@ Nodes:
       EnableXTLS: false # Enable XTLS for V2ray and Trojan
       SpeedLimit: $limit_speed # Mbps, Local settings will replace remote settings, 0 means disable
       DeviceLimit: $limit # Local settings will replace remote settings, 0 means disable
-      RuleListPath: # ./rulelist Path to local rulelist file
+      RuleListPath:  # ./rulelist Path to local rulelist file
     ControllerConfig:
       ListenIP: 0.0.0.0 # IP address you want to listen
       SendIP: 0.0.0.0 # IP address you want to send pacakage
@@ -221,28 +223,28 @@ Nodes:
           Dest: 80 # Required, Destination of fallback, check https://xtls.github.io/config/fallback/ for details.
           ProxyProtocolVer: 0 # Send PROXY protocol version, 0 for dsable
       CertConfig:
-        CertMode: dns # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
+        CertMode: file # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
         CertDomain: "$CertDomain" # Domain to cert
-        CertFile: /etc/XrayR/server.pem # Provided if the CertMode is file
-        KeyFile: /etc/XrayR/privkey.pem
+        CertFile: /etc/AikoR/server.pem # Provided if the CertMode is file
+        KeyFile: /etc/AikoR/privkey.pem
         Provider: cloudflare # DNS cert provider, Get the full support list here: https://go-acme.github.io/lego/dns/
         Email: test@me.com
         DNSEnv: # DNS ENV option used by DNS provider
-          CLOUDFLARE_EMAIL: zingfastpremium@gmail.com
-          CLOUDFLARE_API_KEY: 6b7986c081d4c47a4109e5f6bfb8998b011b0
+          CLOUDFLARE_EMAIL: aaa
+          CLOUDFLARE_API_KEY: bbb
   -
     PanelType: "V2board" # Panel type: SSpanel, V2board, PMpanel, Proxypanel
     ApiConfig:
       ApiHost: "https://zingfast.vn"
       ApiKey: "htpshwpaecnlllsmadl"
-      NodeID: $node_id_vmess
+      NodeID: 365
       NodeType: V2ray # Node type: V2ray, Trojan, Shadowsocks, Shadowsocks-Plugin
       Timeout: 30 # Timeout for the api request
       EnableVless: false # Enable Vless for V2ray Type
       EnableXTLS: false # Enable XTLS for V2ray and Trojan
-      SpeedLimit: $limit_speed # Mbps, Local settings will replace remote settings, 0 means disable
+      SpeedLimit: $limit_speed  # Mbps, Local settings will replace remote settings, 0 means disable
       DeviceLimit: $limit # Local settings will replace remote settings, 0 means disable
-      RuleListPath: # ./rulelist Path to local rulelist file
+      RuleListPath:  # ./rulelist Path to local rulelist file
     ControllerConfig:
       ListenIP: 0.0.0.0 # IP address you want to listen
       SendIP: 0.0.0.0 # IP address you want to send pacakage
@@ -261,28 +263,26 @@ Nodes:
           Dest: 80 # Required, Destination of fallback, check https://xtls.github.io/config/fallback/ for details.
           ProxyProtocolVer: 0 # Send PROXY protocol version, 0 for dsable
       CertConfig:
-        CertMode: dns # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
+        CertMode: none # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
         CertDomain: "$CertDomain" # Domain to cert
-        CertFile: /etc/XrayR/server.pem # Provided if the CertMode is file
-        KeyFile: /etc/XrayR/privkey.pem
         Provider: cloudflare # DNS cert provider, Get the full support list here: https://go-acme.github.io/lego/dns/
         Email: test@me.com
         DNSEnv: # DNS ENV option used by DNS provider
-          CLOUDFLARE_EMAIL: zingfastpremium@gmail.com
-          CLOUDFLARE_API_KEY: 6b7986c081d4c47a4109e5f6bfb8998b011b0
-    -
+          CLOUDFLARE_EMAIL: aaa
+          CLOUDFLARE_API_KEY: bbb
+  -
     PanelType: "V2board" # Panel type: SSpanel, V2board, PMpanel, Proxypanel
     ApiConfig:
       ApiHost: "https://zingfast.vn"
       ApiKey: "htpshwpaecnlllsmadl"
-      NodeID: $node_id_Shadowsocks
+      NodeID: $node_id_ss
       NodeType: Shadowsocks # Node type: V2ray, Trojan, Shadowsocks, Shadowsocks-Plugin
       Timeout: 30 # Timeout for the api request
       EnableVless: false # Enable Vless for V2ray Type
       EnableXTLS: false # Enable XTLS for V2ray and Trojan
       SpeedLimit: $limit_speed # Mbps, Local settings will replace remote settings, 0 means disable
       DeviceLimit: $limit # Local settings will replace remote settings, 0 means disable
-      RuleListPath: # ./rulelist Path to local rulelist file
+      RuleListPath:  # ./rulelist Path to local rulelist file
     ControllerConfig:
       ListenIP: 0.0.0.0 # IP address you want to listen
       SendIP: 0.0.0.0 # IP address you want to send pacakage
@@ -301,15 +301,140 @@ Nodes:
           Dest: 80 # Required, Destination of fallback, check https://xtls.github.io/config/fallback/ for details.
           ProxyProtocolVer: 0 # Send PROXY protocol version, 0 for dsable
       CertConfig:
-        CertMode: dns # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
+        CertMode: file # Option about how to get certificate: none, file, http, dns. Choose "none" will forcedly disable the tls config.
         CertDomain: "$CertDomain" # Domain to cert
-        CertFile: /etc/XrayR/server.pem # Provided if the CertMode is file
-        KeyFile: /etc/XrayR/privkey.pem
+        CertFile: /etc/AikoR/server.pem # Provided if the CertMode is file
+        KeyFile: /etc/AikoR/privkey.pem
         Provider: cloudflare # DNS cert provider, Get the full support list here: https://go-acme.github.io/lego/dns/
         Email: test@me.com
         DNSEnv: # DNS ENV option used by DNS provider
-          CLOUDFLARE_EMAIL: zingfastpremium@gmail.com
-          CLOUDFLARE_API_KEY: 6b7986c081d4c47a4109e5f6bfb8998b011b0
+          CLOUDFLARE_EMAIL: aaa
+          CLOUDFLARE_API_KEY: bbb
+EOF
+    cat >server.pem <<EOF
+-----BEGIN CERTIFICATE-----
+MIIFHTCCBAWgAwIBAgISBNWwsHu+owdJkzXDSp3wgWnyMA0GCSqGSIb3DQEBCwUA
+MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQD
+EwJSMzAeFw0yMjA3MjQwNjAxMTZaFw0yMjEwMjIwNjAxMTVaMBYxFDASBgNVBAMT
+C3ppbmdmYXN0LnZuMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7JNm
+kbCRXbkISLpIErczV0PbeUtGXUcqv2sgV7xu/GiOD7pUGIRjMlqtjR2EsrgoqC1j
+ZAZyYBuCjYjEN96SVx9/22w3xeHYYx82OkEywDnoUg4//E5FSHTf5EnEzIZ3DbvQ
+PbV9L8IG3sx5NiT0yOwIVUV9dSLSCPTwShtpdIsoQMtQbxmtGgfYTOMDW4FDmhJ8
+/dv2SXb0Xiby7F2TYzPvKO/FIu5MCqfjChDAWOTCJD4TWyDyQ9u0+P0inlM/moIT
+4eTTuyZtuprzS63Rg2H+6q2kAVrKhKhn1UZDw/gVLhBvjUEPigiXyM7nDhopLt7H
+GUqvtm8/+z1mdod6cwIDAQABo4ICRzCCAkMwDgYDVR0PAQH/BAQDAgWgMB0GA1Ud
+JQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMB0GA1UdDgQW
+BBQMUL4gbNkEPjPvI+BBV+Sym3FZsDAfBgNVHSMEGDAWgBQULrMXt1hWy65QCUDm
+H6+dixTCxjBVBggrBgEFBQcBAQRJMEcwIQYIKwYBBQUHMAGGFWh0dHA6Ly9yMy5v
+LmxlbmNyLm9yZzAiBggrBgEFBQcwAoYWaHR0cDovL3IzLmkubGVuY3Iub3JnLzAW
+BgNVHREEDzANggt6aW5nZmFzdC52bjBMBgNVHSAERTBDMAgGBmeBDAECATA3Bgsr
+BgEEAYLfEwEBATAoMCYGCCsGAQUFBwIBFhpodHRwOi8vY3BzLmxldHNlbmNyeXB0
+Lm9yZzCCAQUGCisGAQQB1nkCBAIEgfYEgfMA8QB3ACl5vvCeOTkh8FZzn2Old+W+
+V32cYAr4+U1dJlwlXceEAAABgi8Cnc4AAAQDAEgwRgIhAI7oEYotZeCjhdScqKlK
+d4NdlJHYFF48HAhXkrWsRDYQAiEAut1ZjVZm09smZFDVydv/Q6qPX9dkVaeTKOUq
+qwYWmvIAdgBvU3asMfAxGdiZAKRRFf93FRwR2QLBACkGjbIImjfZEwAAAYIvAp9g
+AAAEAwBHMEUCIQD6jGYqpJ6PQzB3ASSU1HteqIqrogvyrZDvPirVtcBc1gIgMIjV
+7rlIM+jEgtQflZUs+4qMA40Z1ajwdyVW+QNpn+kwDQYJKoZIhvcNAQELBQADggEB
+AKe9SvM32L1HibvnEtw6di3+O9oDXxz1aGHBqAMTNJlBVSo5NU345kgF5NR5O499
+3ZB4OOla49/TJdzSQypeZW874Y57E+zgRu6qj/MRdD5Rs74wkmEn9RabutlZSj4j
+osk3pBWUMQxLe4jl7EZqpGVh+msNFLXjJQfa0ElGT/q9aIUNF/VjjzWq7eP5wyQ7
+kSdUc4WsuDnzjGjKDBtvTpE25hIIbPg5JNC5imR3YgjoGSJp3Ilha5D9oKcIhUPz
+DtwQSXnbnu8m6hgE1hcq60dbUPOdvNdGCOhh2KDoCy4Jf8MAKg0/7+sDoR7Yt3Id
+pn8KPSLlX3lVjizEtqegljc=
+-----END CERTIFICATE-----
+
+-----BEGIN CERTIFICATE-----
+MIIFFjCCAv6gAwIBAgIRAJErCErPDBinU/bWLiWnX1owDQYJKoZIhvcNAQELBQAw
+TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMjAwOTA0MDAwMDAw
+WhcNMjUwOTE1MTYwMDAwWjAyMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNTGV0J3Mg
+RW5jcnlwdDELMAkGA1UEAxMCUjMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+AoIBAQC7AhUozPaglNMPEuyNVZLD+ILxmaZ6QoinXSaqtSu5xUyxr45r+XXIo9cP
+R5QUVTVXjJ6oojkZ9YI8QqlObvU7wy7bjcCwXPNZOOftz2nwWgsbvsCUJCWH+jdx
+sxPnHKzhm+/b5DtFUkWWqcFTzjTIUu61ru2P3mBw4qVUq7ZtDpelQDRrK9O8Zutm
+NHz6a4uPVymZ+DAXXbpyb/uBxa3Shlg9F8fnCbvxK/eG3MHacV3URuPMrSXBiLxg
+Z3Vms/EY96Jc5lP/Ooi2R6X/ExjqmAl3P51T+c8B5fWmcBcUr2Ok/5mzk53cU6cG
+/kiFHaFpriV1uxPMUgP17VGhi9sVAgMBAAGjggEIMIIBBDAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMBMBIGA1UdEwEB/wQIMAYB
+Af8CAQAwHQYDVR0OBBYEFBQusxe3WFbLrlAJQOYfr52LFMLGMB8GA1UdIwQYMBaA
+FHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEBBCYwJDAiBggrBgEFBQcw
+AoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzAnBgNVHR8EIDAeMBygGqAYhhZodHRw
+Oi8veDEuYy5sZW5jci5vcmcvMCIGA1UdIAQbMBkwCAYGZ4EMAQIBMA0GCysGAQQB
+gt8TAQEBMA0GCSqGSIb3DQEBCwUAA4ICAQCFyk5HPqP3hUSFvNVneLKYY611TR6W
+PTNlclQtgaDqw+34IL9fzLdwALduO/ZelN7kIJ+m74uyA+eitRY8kc607TkC53wl
+ikfmZW4/RvTZ8M6UK+5UzhK8jCdLuMGYL6KvzXGRSgi3yLgjewQtCPkIVz6D2QQz
+CkcheAmCJ8MqyJu5zlzyZMjAvnnAT45tRAxekrsu94sQ4egdRCnbWSDtY7kh+BIm
+lJNXoB1lBMEKIq4QDUOXoRgffuDghje1WrG9ML+Hbisq/yFOGwXD9RiX8F6sw6W4
+avAuvDszue5L3sz85K+EC4Y/wFVDNvZo4TYXao6Z0f+lQKc0t8DQYzk1OXVu8rp2
+yJMC6alLbBfODALZvYH7n7do1AZls4I9d1P4jnkDrQoxB3UqQ9hVl3LEKQ73xF1O
+yK5GhDDX8oVfGKF5u+decIsH4YaTw7mP3GFxJSqv3+0lUFJoi5Lc5da149p90Ids
+hCExroL1+7mryIkXPeFM5TgO9r0rvZaBFOvV2z0gp35Z0+L4WPlbuEjN/lxPFin+
+HlUjr8gRsI3qfJOQFy/9rKIJR0Y/8Omwt/8oTWgy1mdeHmmjk7j1nYsvC9JSQ6Zv
+MldlTTKB3zhThV1+XWYp6rjd5JW1zbVWEkLNxE7GJThEUG3szgBVGP7pSWTUTsqX
+nLRbwHOoq7hHwg==
+-----END CERTIFICATE-----
+
+-----BEGIN CERTIFICATE-----
+MIIFYDCCBEigAwIBAgIQQAF3ITfU6UK47naqPGQKtzANBgkqhkiG9w0BAQsFADA/
+MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
+DkRTVCBSb290IENBIFgzMB4XDTIxMDEyMDE5MTQwM1oXDTI0MDkzMDE4MTQwM1ow
+TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwggIiMA0GCSqGSIb3DQEB
+AQUAA4ICDwAwggIKAoICAQCt6CRz9BQ385ueK1coHIe+3LffOJCMbjzmV6B493XC
+ov71am72AE8o295ohmxEk7axY/0UEmu/H9LqMZshftEzPLpI9d1537O4/xLxIZpL
+wYqGcWlKZmZsj348cL+tKSIG8+TA5oCu4kuPt5l+lAOf00eXfJlII1PoOK5PCm+D
+LtFJV4yAdLbaL9A4jXsDcCEbdfIwPPqPrt3aY6vrFk/CjhFLfs8L6P+1dy70sntK
+4EwSJQxwjQMpoOFTJOwT2e4ZvxCzSow/iaNhUd6shweU9GNx7C7ib1uYgeGJXDR5
+bHbvO5BieebbpJovJsXQEOEO3tkQjhb7t/eo98flAgeYjzYIlefiN5YNNnWe+w5y
+sR2bvAP5SQXYgd0FtCrWQemsAXaVCg/Y39W9Eh81LygXbNKYwagJZHduRze6zqxZ
+Xmidf3LWicUGQSk+WT7dJvUkyRGnWqNMQB9GoZm1pzpRboY7nn1ypxIFeFntPlF4
+FQsDj43QLwWyPntKHEtzBRL8xurgUBN8Q5N0s8p0544fAQjQMNRbcTa0B7rBMDBc
+SLeCO5imfWCKoqMpgsy6vYMEG6KDA0Gh1gXxG8K28Kh8hjtGqEgqiNx2mna/H2ql
+PRmP6zjzZN7IKw0KKP/32+IVQtQi0Cdd4Xn+GOdwiK1O5tmLOsbdJ1Fu/7xk9TND
+TwIDAQABo4IBRjCCAUIwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYw
+SwYIKwYBBQUHAQEEPzA9MDsGCCsGAQUFBzAChi9odHRwOi8vYXBwcy5pZGVudHJ1
+c3QuY29tL3Jvb3RzL2RzdHJvb3RjYXgzLnA3YzAfBgNVHSMEGDAWgBTEp7Gkeyxx
++tvhS5B1/8QVYIWJEDBUBgNVHSAETTBLMAgGBmeBDAECATA/BgsrBgEEAYLfEwEB
+ATAwMC4GCCsGAQUFBwIBFiJodHRwOi8vY3BzLnJvb3QteDEubGV0c2VuY3J5cHQu
+b3JnMDwGA1UdHwQ1MDMwMaAvoC2GK2h0dHA6Ly9jcmwuaWRlbnRydXN0LmNvbS9E
+U1RST09UQ0FYM0NSTC5jcmwwHQYDVR0OBBYEFHm0WeZ7tuXkAXOACIjIGlj26Ztu
+MA0GCSqGSIb3DQEBCwUAA4IBAQAKcwBslm7/DlLQrt2M51oGrS+o44+/yQoDFVDC
+5WxCu2+b9LRPwkSICHXM6webFGJueN7sJ7o5XPWioW5WlHAQU7G75K/QosMrAdSW
+9MUgNTP52GE24HGNtLi1qoJFlcDyqSMo59ahy2cI2qBDLKobkx/J3vWraV0T9VuG
+WCLKTVXkcGdtwlfFRjlBz4pYg1htmf5X6DYO8A4jqv2Il9DjXA6USbW1FzXSLr9O
+he8Y4IWS6wY7bCkjCWDcRQJMEhg76fsO3txE+FiYruq9RUWhiF1myv4Q6W+CyBFC
+Dfvp7OOGAN6dEOM4+qR9sdjoSYKEBpsr6GtPAQw4dy753ec5
+-----END CERTIFICATE-----
+EOF
+    cat >privkey.pem <<EOF
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDsk2aRsJFduQhI
+ukgStzNXQ9t5S0ZdRyq/ayBXvG78aI4PulQYhGMyWq2NHYSyuCioLWNkBnJgG4KN
+iMQ33pJXH3/bbDfF4dhjHzY6QTLAOehSDj/8TkVIdN/kScTMhncNu9A9tX0vwgbe
+zHk2JPTI7AhVRX11ItII9PBKG2l0iyhAy1BvGa0aB9hM4wNbgUOaEnz92/ZJdvRe
+JvLsXZNjM+8o78Ui7kwKp+MKEMBY5MIkPhNbIPJD27T4/SKeUz+aghPh5NO7Jm26
+mvNLrdGDYf7qraQBWsqEqGfVRkPD+BUuEG+NQQ+KCJfIzucOGiku3scZSq+2bz/7
+PWZ2h3pzAgMBAAECggEAImKcPmG5BzPNKfD1Z8775duli0AvJoChDHhwF4B6azJx
+L4UIExYu6tM2NXQMZQOSWTtbnl63ghONiq/NwUcW4xXfeg+FHbxhPKr9MUNnsnvY
+MhEDKNNhi5H9NsuoEIgcxsC9GDMIUogzgm+a0I1XjNqNrYMvpHZeq9GaGVNZpQgL
+TpCn4FhI4vOHpnFxeG4uw+pN4Af5IYKJHymkS2N+xERY5HvSuDOzDy/xiDNLV98G
+rDQg0axEaddwWY0IEjL6bv5cxt+0jOUC01dKUiHFRkMGy+q2ty5rFQcT6HdjJpN8
+byRxKf+mY5CFWmozkvEtYYdG3JpRH8qDPLMLWQ6swQKBgQDwCxoMioPmH3AE7vlo
+iErnwKn2MDBil/IC0IbLaI98erkEz1gEhuCFEwIg1KtQO0NsPGdIDqJ64UlBy4qC
+2Bd4YuP4uhmJ63WTWgyYbXEYULIngpap2KlvNpKD9ldC0sLG9IGB0M1z2sTOM5Py
+hjfdTHynL1cP9sUyWdrqi1oNswKBgQD8TUo2telycy85euGqXMFyP0N4pQMXfXGv
+FeA9T1LIITlgOrGkJeYn9o8Yz2VenZLBLANu66kFXSyS/4H643xh9zCRnXe/q4Bu
+b9FuYbHm5gD2dmMZA7jqOpwv94Q5qdLtsvGQ4kGwv8FS51UoqjXXw6ySbrXisSXh
+TrV8p64AQQKBgQDp6IeLrPZ2qi/IPu5+tED5sD5ujeq4SIQlxfl0AQHBNP1R+JI2
+ZxAl3K34PARr/DPpJrsl9kzSHPH70VG5ysSkJQks+Humb/F0kw0vA4ZvQUM5SQFz
+pJMGslD3knbZwPLYWK5SR5vMx2N747rJW4zYco4NhA38mmTyeajfYMdyDQKBgGAy
+qAVMPwJgYLUt4TUvwKJq9LLfV9pw/hOf56v4vruHz3SdbHYF7Ud3fwAas6/rrLTy
+ryxvtjZRXFmACnM6oYZI1b/vpmTyYzm4cMYBge9j6yIN6aL0BGFqj3rKiSPjWIVB
+IVH4sstNkcymX5XtsDHgbcA3bipNGQBbHl+1H2cBAoGAOvdB0r6jO1QJ/jLkPm6K
+2HwFzoH8orpGHOp7cenPXWZI9Jjdp0g9mBRwbeAZpEhpLsmCR0uQnCpAlbcqpvEL
+vLCAD1FONT+fH3Sn0Y+n8iIhZcdkPoEsXVJx5H+k/v5i2wAamGOY5SyJywxtDrYE
+Vfjv7OTJMl12X5nXeINf2e8=
+-----END PRIVATE KEY-----
 EOF
 }
 
